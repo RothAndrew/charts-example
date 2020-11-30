@@ -1,0 +1,4 @@
+owner: rothandrew
+git-repo: charts-example
+package-path: .cr-release-packages
+charts-repo: https://rothandrew.github.io/charts-example/
