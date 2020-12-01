@@ -24,7 +24,7 @@ tasks:
   test:
     desc: Run automated tests
     cmds:
-      - task: package
+      - task: chart-releaser:package
 
   secure:
     desc: Run automated security checks
@@ -39,18 +39,22 @@ tasks:
 
   deploy:
     desc: Deploy project
+    vars:
+      owner: '{{ coalesce .CR_OWNER "<no value>" }}'
+      gitRepo: '{{ coalesce .CR_GIT_REPO "<no value>" }}'
+      chartsRepo: '{{ coalesce .CR_CHARTS_REPO "<no value>" }}'
+    preconditions:
+      - sh: test "{{.owner}}" != "<no value>"
+        msg: "CR_OWNER not set"
+      - sh: test "{{.gitRepo}}" != "<no value>"
+        msg: "CR_GIT_REPO not set"
+      - sh: test "{{.chartsRepo}}" != "<no value>"
+        msg: "CR_CHARTS_REPO not set"
     cmds:
       - |
         rm -rf .cr-index \
         && mkdir .cr-index \
-        && helm-cr index --config .chart-releaser-config.yaml \
-        && currentBranch=$(git branch --show-current) \
-        && git checkout gh-pages \
-        && cp -f .cr-index/index.yaml index.yaml \
-        && git add index.yaml \
-        && git commit --no-verify --message="Update index.yaml" \
-        && git push origin gh-pages \
-        && git checkout $currentBranch
+        && helm-cr index --push
 
   chart-releaser:package:
     desc: Package all charts, then delete ones that already have been uploaded
