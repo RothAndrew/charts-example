@@ -36,25 +36,12 @@ tasks:
     cmds:
       - task: chart-releaser:package
       - task: chart-releaser:upload
+      - task: chart-releaser:indexAndPush
 
   deploy:
     desc: Deploy project
-    vars:
-      owner: '{{ coalesce .CR_OWNER "<no value>" }}'
-      gitRepo: '{{ coalesce .CR_GIT_REPO "<no value>" }}'
-      chartsRepo: '{{ coalesce .CR_CHARTS_REPO "<no value>" }}'
-    preconditions:
-      - sh: test "{{.owner}}" != "<no value>"
-        msg: "CR_OWNER not set"
-      - sh: test "{{.gitRepo}}" != "<no value>"
-        msg: "CR_GIT_REPO not set"
-      - sh: test "{{.chartsRepo}}" != "<no value>"
-        msg: "CR_CHARTS_REPO not set"
     cmds:
-      - |
-        rm -rf .cr-index \
-        && mkdir .cr-index \
-        && helm-cr index --push
+      - echo "N/A"
 
   chart-releaser:package:
     desc: Package all charts, then delete ones that already have been uploaded
@@ -87,5 +74,24 @@ tasks:
         if [ -n "$(find ".cr-release-packages" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
             echo "No action taken. There was nothing to upload"
         else
-            helm-cr upload --config .chart-releaser-config.yaml --commit "{{.commit}}"
+            helm-cr upload --commit "{{.commit}}"
         fi
+
+  chart-releaser:indexAndPush:
+    desc: Create and push index.yaml to gh-pages branch
+    vars:
+      owner: '{{ coalesce .CR_OWNER "<no value>" }}'
+      gitRepo: '{{ coalesce .CR_GIT_REPO "<no value>" }}'
+      chartsRepo: '{{ coalesce .CR_CHARTS_REPO "<no value>" }}'
+    preconditions:
+      - sh: test "{{.owner}}" != "<no value>"
+        msg: "CR_OWNER not set"
+      - sh: test "{{.gitRepo}}" != "<no value>"
+        msg: "CR_GIT_REPO not set"
+      - sh: test "{{.chartsRepo}}" != "<no value>"
+        msg: "CR_CHARTS_REPO not set"
+    cmds:
+      - |
+        rm -rf .cr-index \
+        && mkdir .cr-index \
+        && helm-cr index --push
